@@ -280,3 +280,46 @@
   color: var(--accent2);
   background: rgba(255,204,0,0.12);
 }
+
+/* ─── Toggle switch ─── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 8px;
+}
+.toggle-label {
+  font-size: 7px;
+  color: var(--dim);
+}
+.toggle-row input[type="checkbox"] {
+  display: none;
+}
+.toggle-track {
+  width: 32px;
+  height: 16px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  position: relative;
+  display: inline-block;
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.toggle-row input:checked + .toggle-track {
+  background: var(--accent2);
+  border-color: var(--accent2);
+}
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  background: var(--bg);
+  transition: left .15s;
+}
+.toggle-row input:checked + .toggle-track .toggle-thumb {
+  left: 18px;
+}

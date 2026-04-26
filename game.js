@@ -13,10 +13,15 @@ const cfg = {
   rounds:  { val:3,  min:1,  max:10 },
 };
 
-let gameMode   = 'flags';
-let ruleMode   = 'normal';
-let mapStyle   = 'retro';
-let gameSpeed  = 1;
+let gameMode      = 'flags';
+let ruleMode      = 'normal';
+let mapStyle      = 'retro';
+let gameSpeed     = 1;
+let boostsEnabled = true;
+
+function toggleBoosts(el) {
+  boostsEnabled = el.checked;
+}
 
 function adj(key, delta) {
   const c = cfg[key];
@@ -233,7 +238,7 @@ function startGame() {
 }
 
 function startRound() {
-  bombs=[]; boosts=[]; boostSpawnTimer=BOOST_INTERVAL;
+  bombs=[]; boosts=[]; boostSpawnTimer=boostsEnabled?BOOST_INTERVAL:Infinity;
   holdTime={}; particles=[]; paused=false; teams={};
   initBoxes(); spawnBombs();
   document.getElementById('overlay').style.display='none';
@@ -389,9 +394,11 @@ function update(dt) {
       resolveBoxCollision(alive[i],alive[j]);
 
   // boosts
-  boostSpawnTimer-=dt;
-  if(boostSpawnTimer<=0){ spawnBoost(); boostSpawnTimer=BOOST_INTERVAL; }
-  checkBoostPickup();
+  if(boostsEnabled){
+    boostSpawnTimer-=dt;
+    if(boostSpawnTimer<=0){ spawnBoost(); boostSpawnTimer=BOOST_INTERVAL; }
+    checkBoostPickup();
+  }
   for(let i=boosts.length-1;i>=0;i--){ boosts[i].life-=dt; boosts[i].pulse+=.08; if(boosts[i].life<=0) boosts.splice(i,1); }
 
   // bombas
@@ -433,8 +440,8 @@ function resolveBoxCollision(a,b) {
   if(ox<oy){ const push=ox/2+1,sign=dx>=0?1:-1; a.x-=push*sign; b.x+=push*sign; [a.vx,b.vx]=[b.vx,a.vx]; }
   else      { const push=oy/2+1,sign=dy>=0?1:-1; a.y-=push*sign; b.y+=push*sign; [a.vy,b.vy]=[b.vy,a.vy]; }
   for(const bomb of bombs){
-    if(bomb.holder===a.id){ bomb.holder=b.id; b.bombFlash=.25; bomb.timer=bombDuration; }
-    else if(bomb.holder===b.id){ bomb.holder=a.id; a.bombFlash=.25; bomb.timer=bombDuration; }
+    if(bomb.holder===a.id){ bomb.holder=b.id; b.bombFlash=.25; }
+    else if(bomb.holder===b.id){ bomb.holder=a.id; a.bombFlash=.25; }
   }
 }
 
