@@ -82,7 +82,12 @@
     <span>VIVOS: <span class="alive" id="hudAlive">0</span></span>
     <span class="timer-hud" id="hudSeed" style="font-size:7px;color:var(--dim)">SEED:0</span>
     <span>BOMBA: <span class="timer-hud" id="hudTimer">0s</span></span>
-    <button class="pxbtn" onclick="togglePause()" style="font-size:8px">⏸ PAUSA</button>
+    <div style="display:flex;gap:4px;align-items:center">
+      <button class="pxbtn speed-btn active" onclick="setGameSpeed(1,this)" style="font-size:7px;padding:4px 6px">1x</button>
+      <button class="pxbtn speed-btn" onclick="setGameSpeed(2,this)" style="font-size:7px;padding:4px 6px">2x</button>
+      <button class="pxbtn speed-btn" onclick="setGameSpeed(5,this)" style="font-size:7px;padding:4px 6px">5x</button>
+      <button class="pxbtn" onclick="togglePause()" style="font-size:8px;padding:4px 8px">⏸</button>
+    </div>
   </div>
   <div id="bombTimerBar"><div id="bombTimerFill"></div></div>
   <canvas id="canvas"></canvas>
@@ -97,6 +102,16 @@
       <button class="pxbtn" onclick="restartGame()" style="font-size:9px; padding:10px 16px">↩ REINICIAR</button>
       <button class="pxbtn" onclick="goMenu()" style="font-size:9px; padding:10px 16px">☰ MENÚ</button>
     </div>
+  </div>
+</div>
+
+<!-- ─── PAUSE MENU ─── -->
+<div id="pauseMenu" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:center;justify-content:center;">
+  <div style="background:var(--panel);border:2px solid var(--border);padding:28px 24px;display:flex;flex-direction:column;gap:14px;align-items:center;min-width:220px;box-shadow:0 0 40px rgba(0,0,0,0.5)">
+    <span style="font-size:13px;color:var(--accent2);letter-spacing:2px">⏸ PAUSA</span>
+    <div style="height:1px;width:100%;background:var(--border)"></div>
+    <button class="pxbtn" onclick="resumeGame()" style="width:100%;font-size:9px;padding:12px">▶ REANUDAR</button>
+    <button class="pxbtn" onclick="endGame()" style="width:100%;font-size:9px;padding:12px;border-color:var(--accent);color:var(--accent)">✕ TERMINAR PARTIDA</button>
   </div>
 </div>
 

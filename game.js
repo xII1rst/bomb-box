@@ -10,6 +10,13 @@ const cfg = {
 
 let gameMode = 'flags';
 let mapStyle = 'retro'; // 'retro' | 'modern'
+let gameSpeed = 1;      // multiplicador: 1 | 2 | 5
+
+function setGameSpeed(mult, btn) {
+  gameSpeed = mult;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
 
 function setMapStyle(btn) {
   document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
@@ -167,7 +174,7 @@ function startGame() {
 
   const sIdx = cfg.mapSize.val;
   [mapW, mapH] = mapSizes[sIdx];
-  BOX = 36;
+  BOX = 40;
   SPEED_BASE = 1 + cfg.speed.val * 0.8;
   bombDuration = cfg.bombTime.val;
 
@@ -208,7 +215,25 @@ function goMenu() {
 
 function togglePause() {
   paused = !paused;
-  if (!paused) { lastTime = performance.now(); animId = requestAnimationFrame(loop); }
+  if (!paused) {
+    document.getElementById('pauseMenu').style.display = 'none';
+    lastTime = performance.now();
+    animId = requestAnimationFrame(loop);
+  } else {
+    document.getElementById('pauseMenu').style.display = 'flex';
+  }
+}
+
+function resumeGame() {
+  paused = false;
+  document.getElementById('pauseMenu').style.display = 'none';
+  lastTime = performance.now();
+  animId = requestAnimationFrame(loop);
+}
+
+function endGame() {
+  document.getElementById('pauseMenu').style.display = 'none';
+  goMenu();
 }
 
 // ─────────────────────────────────────────────
@@ -268,7 +293,8 @@ function loop(ts) {
   const dt = Math.min((ts - lastTime) / 1000, 0.05);
   lastTime = ts;
 
-  update(dt);
+  const scaledDt = dt * gameSpeed;
+  update(scaledDt);
   render();
   updateHUD();
 
@@ -642,24 +668,30 @@ function drawBox(b) {
 }
 
 function drawFlag(data, hs) {
+  const size = BOX; // siempre exactamente BOX, sin depender de hs
+  const half = size / 2;
+  // Clip al cuadro para que ninguna imagen se desborde
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(-half, -half, size, size);
+  ctx.clip();
   const img = flagImgCache[data.code];
-  // Usar exactamente -hs a +hs en ambos ejes → siempre BOX×BOX
-  const size = hs * 2;
   if (img && img.complete && img.naturalWidth > 0) {
-    ctx.imageSmoothingEnabled = false; // pixel-perfect, sin blur
-    ctx.drawImage(img, -hs, -hs, size, size);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, -half, -half, size, size);
   } else {
-    // fallback: franjas de color
     const [c1,c2,c3] = data.colors;
     const bh = size / 3;
-    ctx.fillStyle = c1; ctx.fillRect(-hs, -hs, size, bh);
-    ctx.fillStyle = c2; ctx.fillRect(-hs, -hs + bh, size, bh);
-    ctx.fillStyle = c3; ctx.fillRect(-hs, -hs + bh*2, size, bh);
+    ctx.fillStyle = c1; ctx.fillRect(-half, -half, size, bh);
+    ctx.fillStyle = c2; ctx.fillRect(-half, -half + bh, size, bh);
+    ctx.fillStyle = c3; ctx.fillRect(-half, -half + bh*2, size, bh);
   }
-  // borde uniforme para todos
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(-hs, -hs, size, size);
+  ctx.restore();
+  // borde uniforme siempre encima
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-half, -half, size, size);
 }
 
 function drawAbstract(data, hs) {
