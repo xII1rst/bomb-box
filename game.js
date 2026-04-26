@@ -98,6 +98,7 @@ let mapW, mapH, BOX, SPEED_BASE;
 let mapSizes = [[320,480],[440,640],[560,820]];
 let mapPlatforms = [];
 let currentSeed = 0;
+let bombVisible = false;   // oculta la bomba hasta que llegue a su primer portador
 
 // PRNG simple con semilla
 function seededRand(seed) {
@@ -256,6 +257,7 @@ function spawnBomb() {
   };
   bombHolder = null;
   bombTimer = bombDuration;
+  bombVisible = false;  // se vuelve visible cuando toca a alguien
 }
 
 // ─────────────────────────────────────────────
@@ -402,6 +404,7 @@ function update(dt) {
       if (Math.hypot(dx, dy) < BOX/2 + bomb.r - 2) {
         bombHolder = b.id;
         bombTimer = bombDuration;
+        bombVisible = true;  // ahora sí se muestra
         b.bombFlash = 0.3;
         break;
       }
@@ -410,6 +413,7 @@ function update(dt) {
 
   // ── BOMBA CON PORTADOR: seguir al cuadro ──
   if (bombHolder !== null) {
+    bombVisible = true;
     const h = boxes[bombHolder];
     if (h && h.alive) {
       bomb.x = h.x;
@@ -482,8 +486,8 @@ function render() {
     drawBox(b);
   }
 
-  // bomb
-  if (bomb && bombHolder === null) drawFreeBomb(bomb);
+  // bomb — solo visible después de tocar su primer portador
+  if (bomb && bombVisible && bombHolder === null) drawFreeBomb(bomb);
 
   // particles
   for (const p of particles) {
@@ -607,13 +611,6 @@ function drawBox(b) {
 
   if (gameMode === 'flags') {
     drawFlag(b.data, hs);
-    // label
-    if (b.alive) {
-      ctx.font = '7px "Press Start 2P"';
-      ctx.textAlign = 'center';
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.fillText(b.data.name.slice(0,6), 0, hs + 12);
-    }
   } else if (gameMode === 'colors') {
     ctx.fillStyle = b.data.color;
     ctx.fillRect(-hs, -hs, BOX, BOX);
@@ -646,24 +643,23 @@ function drawBox(b) {
 
 function drawFlag(data, hs) {
   const img = flagImgCache[data.code];
+  // Usar exactamente -hs a +hs en ambos ejes → siempre BOX×BOX
+  const size = hs * 2;
   if (img && img.complete && img.naturalWidth > 0) {
-    // imagen real de flagcdn
-    ctx.drawImage(img, -hs, -hs, BOX, BOX);
-    // borde sutil
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(-hs, -hs, BOX, BOX);
+    ctx.imageSmoothingEnabled = false; // pixel-perfect, sin blur
+    ctx.drawImage(img, -hs, -hs, size, size);
   } else {
     // fallback: franjas de color
     const [c1,c2,c3] = data.colors;
-    const w = BOX, h = BOX, bh = h/3;
-    ctx.fillStyle = c1; ctx.fillRect(-hs,-hs,w,bh);
-    ctx.fillStyle = c2; ctx.fillRect(-hs,-hs+bh,w,bh);
-    ctx.fillStyle = c3; ctx.fillRect(-hs,-hs+bh*2,w,bh);
-    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(-hs,-hs,w,h);
+    const bh = size / 3;
+    ctx.fillStyle = c1; ctx.fillRect(-hs, -hs, size, bh);
+    ctx.fillStyle = c2; ctx.fillRect(-hs, -hs + bh, size, bh);
+    ctx.fillStyle = c3; ctx.fillRect(-hs, -hs + bh*2, size, bh);
   }
+  // borde uniforme para todos
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-hs, -hs, size, size);
 }
 
 function drawAbstract(data, hs) {
@@ -833,14 +829,16 @@ function showEndScreen(alive) {
     const winner = alive[0];
     let name = '';
     if (gameMode === 'flags') name = winner.data.name;
-    else if (gameMode === 'colors') name = winner.data.color;
+    else if (gameMode === 'colors') name = `#${winner.id + 1}`;
     else name = winner.data.shape;
 
     document.getElementById('overlayTitle').textContent = '🏆 GANADOR';
     document.getElementById('overlayMsg').textContent =
       gameMode === 'flags'
         ? `¡${name} sobrevivió!`
-        : `¡El cuadro ${name} sobrevivió!`;
+        : gameMode === 'colors'
+          ? `¡El cuadro ${name} sobrevivió!`
+          : `¡La figura ${name} sobrevivió!`;
   } else {
     document.getElementById('overlayTitle').textContent = '💥 TODOS ELIMINADOS';
     document.getElementById('overlayMsg').textContent = '¡Nadie sobrevivió!';
