@@ -9,35 +9,31 @@
   <title>BombBox</title>
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" href="icon.png" />
-  
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ─── MENU ─── -->
 <div id="menu">
   <h1>BOMB<span>BOX</span></h1>
   <p class="subtitle">¿Quién aguanta la bomba?</p>
   <div class="divider"></div>
 
   <div class="row">
-    <label>CUADROS<br>EN JUEGO</label>
+    <label>CUADROS</label>
     <div class="ctrl">
       <button class="pxbtn" onclick="adj('squares',-1)">◀</button>
       <span class="val-display" id="val-squares">8</span>
       <button class="pxbtn" onclick="adj('squares',1)">▶</button>
     </div>
   </div>
-
   <div class="row">
-    <label>TIEMPO<br>BOMBA (s)</label>
+    <label>BOMBA (s)</label>
     <div class="ctrl">
       <button class="pxbtn" onclick="adj('bombTime',-1)">◀</button>
       <span class="val-display" id="val-bombTime">5</span>
       <button class="pxbtn" onclick="adj('bombTime',1)">▶</button>
     </div>
   </div>
-
   <div class="row">
     <label>VELOCIDAD</label>
     <div class="ctrl">
@@ -46,9 +42,8 @@
       <button class="pxbtn" onclick="adj('speed',1)">▶</button>
     </div>
   </div>
-
   <div class="row">
-    <label>TAMAÑO<br>MAPA</label>
+    <label>MAPA</label>
     <div class="ctrl">
       <button class="pxbtn" onclick="adj('mapSize',-1)">◀</button>
       <span class="val-display" id="val-mapSize">M</span>
@@ -57,35 +52,72 @@
   </div>
 
   <div class="divider"></div>
-  <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px">
-    <label>MODO DE JUEGO</label>
+
+  <div class="row" style="flex-direction:column;align-items:flex-start;gap:6px">
+    <label>VISUAL</label>
     <div class="mode-btns">
-      <button class="mode-btn active" data-mode="flags" onclick="setMode(this)">🏳️ BANDERAS</button>
-      <button class="mode-btn" data-mode="colors" onclick="setMode(this)">🎨 COLORES</button>
-      <button class="mode-btn" data-mode="abstract" onclick="setMode(this)">👾 FIGURAS</button>
+      <button class="mode-btn active" data-mode="flags"    onclick="setMode(this)">🏳️ BANDERAS</button>
+      <button class="mode-btn"        data-mode="colors"   onclick="setMode(this)">🎨 COLORES</button>
+      <button class="mode-btn"        data-mode="abstract" onclick="setMode(this)">👾 FIGURAS</button>
     </div>
   </div>
-  <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px">
-    <label>ESTILO DE MAPA</label>
+
+  <div class="row" style="flex-direction:column;align-items:flex-start;gap:6px">
+    <label>REGIÓN</label>
     <div class="mode-btns">
-      <button class="mode-btn style-btn active" data-style="retro" onclick="setMapStyle(this)">🪨 RETRO</button>
-      <button class="mode-btn style-btn" data-style="modern" onclick="setMapStyle(this)">✨ MODERN</button>
+      <button class="mode-btn region-btn active" data-region="latam"  onclick="setRegion(this)">🌎 LATAM</button>
+      <button class="mode-btn region-btn"        data-region="norte"  onclick="setRegion(this)">🌐 NORTE</button>
+      <button class="mode-btn region-btn"        data-region="europa" onclick="setRegion(this)">🇪🇺 EUROPA</button>
+      <button class="mode-btn region-btn"        data-region="asia"   onclick="setRegion(this)">🌏 ASIA</button>
+      <button class="mode-btn region-btn"        data-region="all"    onclick="setRegion(this)">🌍 TODOS</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="row" style="flex-direction:column;align-items:flex-start;gap:6px">
+    <label>MODO DE JUEGO</label>
+    <div class="mode-btns">
+      <button class="mode-btn rule-btn active" data-rule="normal"  onclick="setRuleMode(this)">💥 NORMAL</button>
+      <button class="mode-btn rule-btn"        data-rule="last"    onclick="setRuleMode(this)">⏱ ÚLTIMO</button>
+      <button class="mode-btn rule-btn"        data-rule="chaos"   onclick="setRuleMode(this)">🌀 CAOS</button>
+      <button class="mode-btn rule-btn"        data-rule="team"    onclick="setRuleMode(this)">👥 EQUIPO</button>
+      <button class="mode-btn rule-btn"        data-rule="rounds"  onclick="setRuleMode(this)">🔁 RONDAS</button>
+    </div>
+  </div>
+
+  <div id="roundsCfg" class="row" style="display:none;align-items:center;gap:8px">
+    <label>RONDAS</label>
+    <div class="ctrl">
+      <button class="pxbtn" onclick="adj('rounds',-1)">◀</button>
+      <span class="val-display" id="val-rounds">3</span>
+      <button class="pxbtn" onclick="adj('rounds',1)">▶</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="row" style="flex-direction:column;align-items:flex-start;gap:6px">
+    <label>ESTILO MAPA</label>
+    <div class="mode-btns">
+      <button class="mode-btn style-btn active" data-style="retro"  onclick="setMapStyle(this)">🪨 RETRO</button>
+      <button class="mode-btn style-btn"        data-style="modern" onclick="setMapStyle(this)">✨ MODERN</button>
     </div>
   </div>
 
   <button id="startBtn" onclick="startGame()">▶ JUGAR</button>
 </div>
 
-<!-- ─── GAME ─── -->
 <div id="gameWrap">
   <div id="hud">
     <span>VIVOS: <span class="alive" id="hudAlive">0</span></span>
+    <span id="hudRound" style="font-size:7px;color:var(--accent2)"></span>
     <span class="timer-hud" id="hudSeed" style="font-size:7px;color:var(--dim)">SEED:0</span>
     <span>BOMBA: <span class="timer-hud" id="hudTimer">0s</span></span>
     <div style="display:flex;gap:4px;align-items:center">
       <button class="pxbtn speed-btn active" onclick="setGameSpeed(1,this)" style="font-size:7px;padding:4px 6px">1x</button>
-      <button class="pxbtn speed-btn" onclick="setGameSpeed(2,this)" style="font-size:7px;padding:4px 6px">2x</button>
-      <button class="pxbtn speed-btn" onclick="setGameSpeed(5,this)" style="font-size:7px;padding:4px 6px">5x</button>
+      <button class="pxbtn speed-btn"        onclick="setGameSpeed(2,this)" style="font-size:7px;padding:4px 6px">2x</button>
+      <button class="pxbtn speed-btn"        onclick="setGameSpeed(5,this)" style="font-size:7px;padding:4px 6px">5x</button>
       <button class="pxbtn" onclick="togglePause()" style="font-size:8px;padding:4px 8px">⏸</button>
     </div>
   </div>
@@ -93,25 +125,23 @@
   <canvas id="canvas"></canvas>
 </div>
 
-<!-- ─── OVERLAY ─── -->
 <div id="overlay">
   <div id="overlayBox">
     <div id="overlayTitle">—</div>
     <div id="overlayMsg">—</div>
-    <div class="overlay-btns">
-      <button class="pxbtn" onclick="restartGame()" style="font-size:9px; padding:10px 16px">↩ REINICIAR</button>
-      <button class="pxbtn" onclick="goMenu()" style="font-size:9px; padding:10px 16px">☰ MENÚ</button>
+    <div id="overlayBtns" class="overlay-btns">
+      <button class="pxbtn" onclick="restartGame()" style="font-size:9px;padding:10px 16px">↩ REINICIAR</button>
+      <button class="pxbtn" onclick="goMenu()"      style="font-size:9px;padding:10px 16px">☰ MENÚ</button>
     </div>
   </div>
 </div>
 
-<!-- ─── PAUSE MENU ─── -->
 <div id="pauseMenu" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:100;align-items:center;justify-content:center;">
   <div style="background:var(--panel);border:2px solid var(--border);padding:28px 24px;display:flex;flex-direction:column;gap:14px;align-items:center;min-width:220px;box-shadow:0 0 40px rgba(0,0,0,0.5)">
     <span style="font-size:13px;color:var(--accent2);letter-spacing:2px">⏸ PAUSA</span>
     <div style="height:1px;width:100%;background:var(--border)"></div>
     <button class="pxbtn" onclick="resumeGame()" style="width:100%;font-size:9px;padding:12px">▶ REANUDAR</button>
-    <button class="pxbtn" onclick="endGame()" style="width:100%;font-size:9px;padding:12px;border-color:var(--accent);color:var(--accent)">✕ TERMINAR PARTIDA</button>
+    <button class="pxbtn" onclick="endGame()"    style="width:100%;font-size:9px;padding:12px;border-color:var(--accent);color:var(--accent)">✕ TERMINAR</button>
   </div>
 </div>
 

@@ -258,3 +258,10 @@
   color: var(--accent2);
   background: rgba(255,204,0,0.12);
 }
+
+/* ─── Speed buttons ─── */
+.speed-btn.active {
+  border-color: var(--accent2);
+  color: var(--accent2);
+  background: rgba(255,204,0,0.12);
+}
