@@ -64,7 +64,7 @@ function preloadFlags(pool) {
     if (flagImgCache[f.code]) continue;
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = 'https://flagcdn.com/48x36/' + f.code + '.png';
+    img.src = 'https://flagcdn.com/' + f.code + '.svg';
     flagImgCache[f.code] = img;
   }
 }
@@ -244,11 +244,15 @@ function initBoxes() {
 //  BOMB
 // ─────────────────────────────────────────────
 function spawnBomb() {
-  // place bomb randomly, not on any box
+  const wall = mapStyle === 'retro' ? 24 : 8;
+  const angle = Math.random() * Math.PI * 2;
+  const bombSpeed = SPEED_BASE * 0.5; // siempre 0.5x la velocidad del jugador
   bomb = {
-    x: BOX + Math.random() * (mapW - BOX*2),
-    y: BOX + Math.random() * (mapH - BOX*2),
+    x: wall + BOX + Math.random() * (mapW - wall*2 - BOX*2),
+    y: wall + BOX + Math.random() * (mapH - wall*2 - BOX*2),
     r: 14,
+    vx: Math.cos(angle) * bombSpeed,
+    vy: Math.sin(angle) * bombSpeed,
   };
   bombHolder = null;
   bombTimer = bombDuration;
@@ -357,33 +361,64 @@ function update(dt) {
     }
   }
 
-  // bomb follows holder
+  // ── BOMBA LIBRE: persigue al cuadro más cercano ──
+  if (bombHolder === null) {
+    // Encontrar cuadro vivo más cercano
+    let nearest = null, nearestDist = Infinity;
+    for (const b of boxes) {
+      if (!b.alive) continue;
+      const d = Math.hypot(b.x - bomb.x, b.y - bomb.y);
+      if (d < nearestDist) { nearestDist = d; nearest = b; }
+    }
+
+    if (nearest) {
+      // Dirigir velocidad hacia el más cercano (steering suave)
+      const dx = nearest.x - bomb.x;
+      const dy = nearest.y - bomb.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const bombSpeed = SPEED_BASE * 0.5;
+      const targetVx = (dx / dist) * bombSpeed * 60;
+      const targetVy = (dy / dist) * bombSpeed * 60;
+      // Interpolación suave para que no sea brusco
+      bomb.vx += (targetVx - bomb.vx) * Math.min(dt * 3, 1);
+      bomb.vy += (targetVy - bomb.vy) * Math.min(dt * 3, 1);
+    }
+
+    // Mover bomba
+    bomb.x += bomb.vx * dt;
+    bomb.y += bomb.vy * dt;
+
+    // Bounce paredes (bomba rebota igual que los cuadros)
+    const wall = mapStyle === 'retro' ? 18 : 4;
+    if (bomb.x - bomb.r < wall)        { bomb.x = wall + bomb.r;       bomb.vx = Math.abs(bomb.vx); }
+    if (bomb.x + bomb.r > mapW - wall) { bomb.x = mapW - wall - bomb.r; bomb.vx = -Math.abs(bomb.vx); }
+    if (bomb.y - bomb.r < wall)        { bomb.y = wall + bomb.r;       bomb.vy = Math.abs(bomb.vy); }
+    if (bomb.y + bomb.r > mapH - wall) { bomb.y = mapH - wall - bomb.r; bomb.vy = -Math.abs(bomb.vy); }
+
+    // Colisión bomba ↔ cuadro: adopción
+    for (const b of boxes) {
+      if (!b.alive) continue;
+      const dx = b.x - bomb.x, dy = b.y - bomb.y;
+      if (Math.hypot(dx, dy) < BOX/2 + bomb.r - 2) {
+        bombHolder = b.id;
+        bombTimer = bombDuration;
+        b.bombFlash = 0.3;
+        break;
+      }
+    }
+  }
+
+  // ── BOMBA CON PORTADOR: seguir al cuadro ──
   if (bombHolder !== null) {
     const h = boxes[bombHolder];
     if (h && h.alive) {
       bomb.x = h.x;
       bomb.y = h.y - BOX/2 - bomb.r;
     }
-  }
-
-  // tick bomb timer
-  if (bombHolder !== null) {
     bombTimer -= dt;
     if (bombTimer <= 0) {
       explode();
       return;
-    }
-  } else {
-    // bomba libre: primer cuadro que la toca la recibe
-    for (const b of boxes) {
-      if (!b.alive) continue;
-      const dx = b.x - bomb.x, dy = b.y - bomb.y;
-      if (Math.hypot(dx,dy) < BOX/2 + bomb.r - 4) {
-        bombHolder = b.id;
-        bombTimer = bombDuration;
-        b.bombFlash = 0.3;
-        break;
-      }
     }
   }
 
