@@ -319,6 +319,13 @@
       <button class="mode-btn" data-mode="abstract" onclick="setMode(this)">👾 FIGURAS</button>
     </div>
   </div>
+  <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px">
+    <label>ESTILO DE MAPA</label>
+    <div class="mode-btns">
+      <button class="mode-btn style-btn active" data-style="retro" onclick="setMapStyle(this)">🪨 RETRO</button>
+      <button class="mode-btn style-btn" data-style="modern" onclick="setMapStyle(this)">✨ MODERN</button>
+    </div>
+  </div>
 
   <button id="startBtn" onclick="startGame()">▶ JUGAR</button>
 </div>
@@ -327,6 +334,7 @@
 <div id="gameWrap">
   <div id="hud">
     <span>VIVOS: <span class="alive" id="hudAlive">0</span></span>
+    <span class="timer-hud" id="hudSeed" style="font-size:7px;color:var(--dim)">SEED:0</span>
     <span>BOMBA: <span class="timer-hud" id="hudTimer">0s</span></span>
     <button class="pxbtn" onclick="togglePause()" style="font-size:8px">⏸ PAUSA</button>
   </div>
@@ -358,6 +366,13 @@ const cfg = {
 };
 
 let gameMode = 'flags';
+let mapStyle = 'retro'; // 'retro' | 'modern'
+
+function setMapStyle(btn) {
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  mapStyle = btn.dataset.style;
+}
 
 function adj(key, delta) {
   const c = cfg[key];
@@ -376,28 +391,40 @@ function setMode(btn) {
 //  FLAGS DATA  (América Latina + España + USA)
 // ─────────────────────────────────────────────
 const FLAGS = [
-  { name:'Argentina',  emoji:'🇦🇷', colors:['#74acdf','#ffffff','#74acdf'] },
-  { name:'Bolivia',    emoji:'🇧🇴', colors:['#d52b1e','#f4e400','#007a3d'] },
-  { name:'Brasil',     emoji:'🇧🇷', colors:['#009c3b','#ffdf00','#002776'] },
-  { name:'Chile',      emoji:'🇨🇱', colors:['#d52b1e','#ffffff','#0039a6'] },
-  { name:'Colombia',   emoji:'🇨🇴', colors:['#fce000','#003087','#ce1126'] },
-  { name:'Costa Rica', emoji:'🇨🇷', colors:['#002b7f','#ffffff','#ce1126'] },
-  { name:'Cuba',       emoji:'🇨🇺', colors:['#002a8f','#ffffff','#cf142b'] },
-  { name:'Ecuador',    emoji:'🇪🇨', colors:['#ffd100','#003da5','#ef3340'] },
-  { name:'El Salvador',emoji:'🇸🇻', colors:['#0f47af','#ffffff','#0f47af'] },
-  { name:'España',     emoji:'🇪🇸', colors:['#c60b1e','#ffc400','#c60b1e'] },
-  { name:'Guatemala',  emoji:'🇬🇹', colors:['#4997d0','#ffffff','#4997d0'] },
-  { name:'Honduras',   emoji:'🇭🇳', colors:['#0073cf','#ffffff','#0073cf'] },
-  { name:'México',     emoji:'🇲🇽', colors:['#006847','#ffffff','#ce1126'] },
-  { name:'Nicaragua',  emoji:'🇳🇮', colors:['#3d5fc4','#ffffff','#3d5fc4'] },
-  { name:'Panamá',     emoji:'🇵🇦', colors:['#ffffff','#d21034','#003580'] },
-  { name:'Paraguay',   emoji:'🇵🇾', colors:['#d52b1e','#ffffff','#0038a8'] },
-  { name:'Perú',       emoji:'🇵🇪', colors:['#d91023','#ffffff','#d91023'] },
-  { name:'Puerto Rico',emoji:'🇵🇷', colors:['#ed0000','#ffffff','#0a0a8a'] },
-  { name:'Uruguay',    emoji:'🇺🇾', colors:['#ffffff','#5b9bd5','#ffffff'] },
-  { name:'Venezuela',  emoji:'🇻🇪', colors:['#cf142b','#003087','#cf9f00'] },
-  { name:'USA',        emoji:'🇺🇸', colors:['#b22234','#ffffff','#3c3b6e'] },
+  { name:'Argentina',   code:'ar', colors:['#74acdf','#ffffff','#74acdf'] },
+  { name:'Bolivia',     code:'bo', colors:['#d52b1e','#f4e400','#007a3d'] },
+  { name:'Brasil',      code:'br', colors:['#009c3b','#ffdf00','#002776'] },
+  { name:'Chile',       code:'cl', colors:['#d52b1e','#ffffff','#0039a6'] },
+  { name:'Colombia',    code:'co', colors:['#fce000','#003087','#ce1126'] },
+  { name:'Costa Rica',  code:'cr', colors:['#002b7f','#ffffff','#ce1126'] },
+  { name:'Cuba',        code:'cu', colors:['#002a8f','#ffffff','#cf142b'] },
+  { name:'Ecuador',     code:'ec', colors:['#ffd100','#003da5','#ef3340'] },
+  { name:'El Salvador', code:'sv', colors:['#0f47af','#ffffff','#0f47af'] },
+  { name:'España',      code:'es', colors:['#c60b1e','#ffc400','#c60b1e'] },
+  { name:'Guatemala',   code:'gt', colors:['#4997d0','#ffffff','#4997d0'] },
+  { name:'Honduras',    code:'hn', colors:['#0073cf','#ffffff','#0073cf'] },
+  { name:'México',      code:'mx', colors:['#006847','#ffffff','#ce1126'] },
+  { name:'Nicaragua',   code:'ni', colors:['#3d5fc4','#ffffff','#3d5fc4'] },
+  { name:'Panamá',      code:'pa', colors:['#ffffff','#d21034','#003580'] },
+  { name:'Paraguay',    code:'py', colors:['#d52b1e','#ffffff','#0038a8'] },
+  { name:'Perú',        code:'pe', colors:['#d91023','#ffffff','#d91023'] },
+  { name:'Puerto Rico', code:'pr', colors:['#ed0000','#ffffff','#0a0a8a'] },
+  { name:'Uruguay',     code:'uy', colors:['#ffffff','#5b9bd5','#ffffff'] },
+  { name:'Venezuela',   code:'ve', colors:['#cf142b','#003087','#cf9f00'] },
+  { name:'USA',         code:'us', colors:['#b22234','#ffffff','#3c3b6e'] },
 ];
+
+// Cache de imágenes de banderas: code → HTMLImageElement
+const flagImgCache = {};
+function preloadFlags(pool) {
+  for (const f of pool) {
+    if (flagImgCache[f.code]) continue;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = 'https://flagcdn.com/48x36/' + f.code + '.png';
+    flagImgCache[f.code] = img;
+  }
+}
 
 // Palette de colores vivos para modo colors
 const PALETTE = [
@@ -426,6 +453,65 @@ let paused = false;
 let particles = [];
 let mapW, mapH, BOX, SPEED_BASE;
 let mapSizes = [[320,480],[440,640],[560,820]];
+let mapPlatforms = [];
+let currentSeed = 0;
+
+// PRNG simple con semilla
+function seededRand(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+
+function generatePlatforms(seed) {
+  const rng = seededRand(seed);
+  const wall = 18;
+  const GAP = 48;          // hueco mínimo garantizado a cada lado
+  const PLAT_H = 12;
+  const MIN_W = 40;
+  // ancho máximo: deja GAP libre a la izquierda Y a la derecha siempre
+  const MAX_W = Math.floor((mapW - wall * 2) * 0.52);
+  const innerW = mapW - wall * 2;
+  const innerH = mapH - wall * 2;
+
+  const platforms = [];
+  const count = 3 + Math.floor(rng() * 3); // 3–5 plataformas
+
+  // Dividir el eje Y en franjas para distribuir verticalmente
+  const stripeH = Math.floor((innerH - 80) / count);
+
+  for (let i = 0; i < count; i++) {
+    let attempts = 0;
+    while (attempts < 20) {
+      attempts++;
+
+      const w = MIN_W + Math.floor(rng() * (MAX_W - MIN_W));
+      const h = PLAT_H;
+
+      // x: garantizar que quede GAP libre a izquierda y derecha
+      const xMin = wall + GAP;
+      const xMax = wall + innerW - GAP - w;
+      if (xMax <= xMin) continue; // mapa muy pequeño, saltar
+
+      const x = xMin + Math.floor(rng() * (xMax - xMin));
+      const y = wall + 40 + i * stripeH + Math.floor(rng() * Math.max(1, stripeH - 40));
+
+      // Verificar que no solape con otra plataforma (margen vertical de 32px)
+      const overlaps = platforms.some(p =>
+        Math.abs(p.y - y) < 32 &&
+        x < p.x + p.w + 8 &&
+        x + w > p.x - 8
+      );
+      if (!overlaps) {
+        platforms.push({ x, y, w, h });
+        break;
+      }
+    }
+  }
+  return platforms;
+}
 
 // ─────────────────────────────────────────────
 //  START / RESTART
@@ -452,6 +538,9 @@ function startGame() {
   canvas.style.height = Math.floor(mapH * scale) + 'px';
 
   ctx = canvas.getContext('2d');
+  currentSeed = Math.floor(Math.random() * 99999);
+  mapPlatforms = generatePlatforms(currentSeed);
+  document.getElementById('hudSeed').textContent = 'SEED:' + currentSeed;
   initBoxes();
   spawnBomb();
   paused = false;
@@ -490,6 +579,7 @@ function initBoxes() {
     pool = [...FLAGS].sort(() => Math.random()-.5).slice(0, Math.min(n, FLAGS.length));
     // pad if n > pool
     while (pool.length < n) pool.push(pool[Math.floor(Math.random()*pool.length)]);
+    preloadFlags(pool);
   }
 
   for (let i = 0; i < n; i++) {
@@ -552,11 +642,31 @@ function update(dt) {
     if (!b.alive) continue;
     b.x += b.vx * 60 * dt;
     b.y += b.vy * 60 * dt;
-    // bounce walls
-    if (b.x - BOX/2 < 0)       { b.x = BOX/2;        b.vx = Math.abs(b.vx); }
-    if (b.x + BOX/2 > mapW)     { b.x = mapW-BOX/2;   b.vx = -Math.abs(b.vx); }
-    if (b.y - BOX/2 < 0)        { b.y = BOX/2;        b.vy = Math.abs(b.vy); }
-    if (b.y + BOX/2 > mapH)     { b.y = mapH-BOX/2;   b.vy = -Math.abs(b.vy); }
+    // bounce paredes externas
+    const wall = mapStyle === 'retro' ? 18 : 0;
+    if (b.x - BOX/2 < wall)          { b.x = wall+BOX/2;       b.vx = Math.abs(b.vx); }
+    if (b.x + BOX/2 > mapW-wall)     { b.x = mapW-wall-BOX/2;  b.vx = -Math.abs(b.vx); }
+    if (b.y - BOX/2 < wall)          { b.y = wall+BOX/2;       b.vy = Math.abs(b.vy); }
+    if (b.y + BOX/2 > mapH-wall)     { b.y = mapH-wall-BOX/2;  b.vy = -Math.abs(b.vy); }
+
+    // bounce plataformas
+    for (const plat of mapPlatforms) {
+      const hs = BOX/2;
+      const overX = (b.x + hs > plat.x) && (b.x - hs < plat.x + plat.w);
+      const overY = (b.y + hs > plat.y) && (b.y - hs < plat.y + plat.h);
+      if (overX && overY) {
+        // calcular penetración por cada lado
+        const fromLeft   = (b.x + hs) - plat.x;
+        const fromRight  = (plat.x + plat.w) - (b.x - hs);
+        const fromTop    = (b.y + hs) - plat.y;
+        const fromBottom = (plat.y + plat.h) - (b.y - hs);
+        const minPen = Math.min(fromLeft, fromRight, fromTop, fromBottom);
+        if (minPen === fromTop)    { b.y = plat.y - hs;              b.vy = -Math.abs(b.vy); }
+        else if (minPen === fromBottom) { b.y = plat.y+plat.h + hs; b.vy = Math.abs(b.vy); }
+        else if (minPen === fromLeft)   { b.x = plat.x - hs;        b.vx = -Math.abs(b.vx); }
+        else                            { b.x = plat.x+plat.w + hs; b.vx = Math.abs(b.vx); }
+      }
+    }
   }
 
   // ── COLISIONES ENTRE CUADROS ──
@@ -678,12 +788,11 @@ function explode() {
 function render() {
   ctx.clearRect(0,0,mapW,mapH);
 
-  // bg grid
-  ctx.strokeStyle = 'rgba(42,42,90,0.4)';
-  ctx.lineWidth = 1;
-  const g = 32;
-  for (let x = 0; x < mapW; x+=g) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,mapH); ctx.stroke(); }
-  for (let y = 0; y < mapH; y+=g) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(mapW,y); ctx.stroke(); }
+  if (mapStyle === 'retro') {
+    drawRetroBackground();
+  } else {
+    drawModernBackground();
+  }
 
   // boxes (dead first, alive on top)
   for (const b of boxes) {
@@ -714,6 +823,98 @@ function render() {
     if (h && h.alive) {
       drawAttachedBomb(bomb, h);
     }
+  }
+}
+
+function drawRetroBackground() {
+  // fondo oscuro tipo tierra
+  ctx.fillStyle = '#0a0a14';
+  ctx.fillRect(0, 0, mapW, mapH);
+
+  // paredes laterales con textura de piedra
+  const tileW = 16, tileH = 16;
+  const wallW = 16;
+
+  function drawStoneTile(tx, ty) {
+    ctx.fillStyle = '#2a2a3e';
+    ctx.fillRect(tx, ty, tileW, tileH);
+    ctx.fillStyle = '#3a3a52';
+    ctx.fillRect(tx+1, ty+1, tileW-2, 4);
+    ctx.fillStyle = '#1e1e2e';
+    ctx.strokeStyle = '#1a1a2a';
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(tx, ty, tileW, tileH);
+  }
+
+  // paredes top/bottom/left/right
+  for (let x = 0; x < mapW; x += tileW) {
+    for (let row = 0; row < wallW; row += tileH) {
+      drawStoneTile(x, row);
+      drawStoneTile(x, mapH - wallW + row);
+    }
+  }
+  for (let y = wallW; y < mapH - wallW; y += tileH) {
+    for (let col = 0; col < wallW; col += tileW) {
+      drawStoneTile(col, y);
+      drawStoneTile(mapW - wallW + col, y);
+    }
+  }
+
+  // suelo interior con grid sutil
+  ctx.strokeStyle = 'rgba(42,42,80,0.25)';
+  ctx.lineWidth = 0.5;
+  const g = 16;
+  for (let x = wallW; x < mapW - wallW; x += g) {
+    ctx.beginPath(); ctx.moveTo(x, wallW); ctx.lineTo(x, mapH - wallW); ctx.stroke();
+  }
+  for (let y = wallW; y < mapH - wallW; y += g) {
+    ctx.beginPath(); ctx.moveTo(wallW, y); ctx.lineTo(mapW - wallW, y); ctx.stroke();
+  }
+
+  // plataformas del mapa (generadas desde semilla)
+  for (const plat of mapPlatforms) {
+    // base
+    ctx.fillStyle = '#3a3450';
+    ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+    // borde superior iluminado
+    ctx.fillStyle = '#5a5070';
+    ctx.fillRect(plat.x, plat.y, plat.w, 3);
+    // divisiones de tile
+    ctx.strokeStyle = '#2a2040';
+    ctx.lineWidth = 0.5;
+    for (let tx = plat.x; tx < plat.x + plat.w; tx += 16) {
+      ctx.beginPath(); ctx.moveTo(tx, plat.y); ctx.lineTo(tx, plat.y + plat.h); ctx.stroke();
+    }
+  }
+}
+
+function drawModernBackground() {
+  // fondo limpio con grid
+  ctx.fillStyle = '#080810';
+  ctx.fillRect(0, 0, mapW, mapH);
+  ctx.strokeStyle = 'rgba(42,42,90,0.35)';
+  ctx.lineWidth = 1;
+  const g = 32;
+  for (let x = 0; x < mapW; x += g) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, mapH); ctx.stroke();
+  }
+  for (let y = 0; y < mapH; y += g) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(mapW, y); ctx.stroke();
+  }
+
+  // plataformas estilo simple
+  for (const plat of mapPlatforms) {
+    ctx.fillStyle = '#1e1e3a';
+    ctx.fillRect(plat.x, plat.y, plat.w, plat.h);
+    ctx.strokeStyle = '#4444aa';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(plat.x, plat.y, plat.w, plat.h);
+    // esquinas pixel
+    ctx.fillStyle = '#4444aa';
+    ctx.fillRect(plat.x, plat.y, 3, 3);
+    ctx.fillRect(plat.x + plat.w - 3, plat.y, 3, 3);
+    ctx.fillRect(plat.x, plat.y + plat.h - 3, 3, 3);
+    ctx.fillRect(plat.x + plat.w - 3, plat.y + plat.h - 3, 3, 3);
   }
 }
 
@@ -766,14 +967,25 @@ function drawBox(b) {
 }
 
 function drawFlag(data, hs) {
-  const [c1,c2,c3] = data.colors;
-  const w = BOX, h = BOX, bh = h/3;
-  ctx.fillStyle = c1; ctx.fillRect(-hs,-hs,w,bh);
-  ctx.fillStyle = c2; ctx.fillRect(-hs,-hs+bh,w,bh);
-  ctx.fillStyle = c3; ctx.fillRect(-hs,-hs+bh*2,w,bh);
-  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(-hs,-hs,w,h);
+  const img = flagImgCache[data.code];
+  if (img && img.complete && img.naturalWidth > 0) {
+    // imagen real de flagcdn
+    ctx.drawImage(img, -hs, -hs, BOX, BOX);
+    // borde sutil
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-hs, -hs, BOX, BOX);
+  } else {
+    // fallback: franjas de color
+    const [c1,c2,c3] = data.colors;
+    const w = BOX, h = BOX, bh = h/3;
+    ctx.fillStyle = c1; ctx.fillRect(-hs,-hs,w,bh);
+    ctx.fillStyle = c2; ctx.fillRect(-hs,-hs+bh,w,bh);
+    ctx.fillStyle = c3; ctx.fillRect(-hs,-hs+bh*2,w,bh);
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(-hs,-hs,w,h);
+  }
 }
 
 function drawAbstract(data, hs) {
