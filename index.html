@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>BombBox</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.png" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
+
+    :root {
+      --bg: #0d0d1a;
+      --panel: #14142a;
+      --border: #2a2a5a;
+      --accent: #ff4444;
+      --accent2: #ffcc00;
+      --accent3: #44ff88;
+      --text: #e8e8ff;
+      --dim: #888aaa;
+      --pixel: 2px solid #2a2a5a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Press Start 2P', monospace;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ─── SCANLINE OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ─── MENU ─── */
+    #menu {
+      width: min(420px, 96vw);
+      background: var(--panel);
+      border: var(--pixel);
+      border-color: var(--border);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow: 0 0 40px rgba(255,68,68,0.15), inset 0 0 20px rgba(0,0,0,0.4);
+    }
+
+    #menu h1 {
+      text-align: center;
+      font-size: clamp(18px,5vw,28px);
+      color: var(--accent);
+      text-shadow: 0 0 10px var(--accent), 0 0 30px rgba(255,68,68,0.4);
+      letter-spacing: 4px;
+      margin-bottom: 4px;
+    }
+
+    #menu h1 span { color: var(--accent2); }
+
+    .subtitle {
+      text-align: center;
+      font-family: 'VT323', monospace;
+      font-size: 18px;
+      color: var(--dim);
+      margin-top: -8px;
+    }
+
+    .divider {
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .row label {
+      font-size: 8px;
+      color: var(--dim);
+      flex: 1;
+      line-height: 1.6;
+    }
+
+    .row .ctrl {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .val-display {
+      font-family: 'VT323', monospace;
+      font-size: 22px;
+      color: var(--accent2);
+      min-width: 36px;
+      text-align: center;
+    }
+
+    button.pxbtn {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      color: var(--text);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
+      transition: all .1s;
+    }
+    button.pxbtn:hover, button.pxbtn:active {
+      background: var(--border);
+      border-color: var(--accent2);
+      color: var(--accent2);
+      transform: scale(1.05);
+    }
+
+    /* Mode selector */
+    .mode-btns {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .mode-btn {
+      background: var(--bg);
+      border: 2px solid var(--border);
+      color: var(--dim);
+      font-family: 'Press Start 2P', monospace;
+      font-size: 7px;
+      padding: 8px 10px;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+      transition: all .15s;
+      line-height: 1.6;
+    }
+    .mode-btn.active {
+      border-color: var(--accent2);
+      color: var(--accent2);
+      background: rgba(255,204,0,0.08);
+      box-shadow: 0 0 8px rgba(255,204,0,0.3);
+    }
+
+    #startBtn {
+      margin-top: 4px;
+      background: var(--accent);
+      border: 2px solid #ff6666;
+      color: white;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 13px;
+      padding: 14px;
+      cursor: pointer;
+      letter-spacing: 3px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 0 #aa2222, 0 0 20px rgba(255,68,68,0.4);
+      transition: all .1s;
+    }
+    #startBtn:hover { filter: brightness(1.2); }
+    #startBtn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #aa2222;
+    }
+
+    /* ─── GAME ─── */
+    #gameWrap {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      height: 100dvh;
+    }
+
+    #hud {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 700px;
+      padding: 8px 12px;
+      font-size: 8px;
+      color: var(--dim);
+      flex-shrink: 0;
+    }
+
+    #hud .alive { color: var(--accent3); }
+    #hud .timer-hud { color: var(--accent2); }
+
+    #canvas {
+      display: block;
+      border: 2px solid var(--border);
+      background: #0a0a18;
+      image-rendering: pixelated;
+      cursor: none;
+      flex-shrink: 0;
+    }
+
+    /* ─── OVERLAY (win/lose/pause) ─── */
+    #overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    #overlayBox {
+      background: var(--panel);
+      border: var(--pixel);
+      border-color: var(--accent);
+      padding: 30px 24px;
+      text-align: center;
+      max-width: 360px;
+      width: 90vw;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 0 40px rgba(255,68,68,0.3);
+    }
+    #overlayTitle {
+      font-size: 20px;
+      color: var(--accent);
+      text-shadow: 0 0 12px var(--accent);
+    }
+    #overlayMsg {
+      font-family: 'VT323', monospace;
+      font-size: 22px;
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .overlay-btns {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    #bombTimerBar {
+      width: 100%;
+      max-width: 700px;
+      height: 6px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    #bombTimerFill {
+      height: 100%;
+      background: var(--accent2);
+      transition: background .2s;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── MENU ─── -->
+<div id="menu">
+  <h1>BOMB<span>BOX</span></h1>
+  <p class="subtitle">¿Quién aguanta la bomba?</p>
+  <div class="divider"></div>
+
+  <div class="row">
+    <label>CUADROS<br>EN JUEGO</label>
+    <div class="ctrl">
+      <button class="pxbtn" onclick="adj('squares',-1)">◀</button>
+      <span class="val-display" id="val-squares">8</span>
+      <button class="pxbtn" onclick="adj('squares',1)">▶</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>TIEMPO<br>BOMBA (s)</label>
+    <div class="ctrl">
+      <button class="pxbtn" onclick="adj('bombTime',-1)">◀</button>
+      <span class="val-display" id="val-bombTime">5</span>
+      <button class="pxbtn" onclick="adj('bombTime',1)">▶</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>VELOCIDAD</label>
+    <div class="ctrl">
+      <button class="pxbtn" onclick="adj('speed',-1)">◀</button>
+      <span class="val-display" id="val-speed">3</span>
+      <button class="pxbtn" onclick="adj('speed',1)">▶</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <label>TAMAÑO<br>MAPA</label>
+    <div class="ctrl">
+      <button class="pxbtn" onclick="adj('mapSize',-1)">◀</button>
+      <span class="val-display" id="val-mapSize">M</span>
+      <button class="pxbtn" onclick="adj('mapSize',1)">▶</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="row" style="flex-direction:column; align-items:flex-start; gap:8px">
+    <label>MODO DE JUEGO</label>
+    <div class="mode-btns">
+      <button class="mode-btn active" data-mode="flags" onclick="setMode(this)">🏳️ BANDERAS</button>
+      <button class="mode-btn" data-mode="colors" onclick="setMode(this)">🎨 COLORES</button>
+      <button class="mode-btn" data-mode="abstract" onclick="setMode(this)">👾 FIGURAS</button>
+    </div>
+  </div>
+
+  <button id="startBtn" onclick="startGame()">▶ JUGAR</button>
+</div>
+
+<!-- ─── GAME ─── -->
+<div id="gameWrap">
+  <div id="hud">
+    <span>VIVOS: <span class="alive" id="hudAlive">0</span></span>
+    <span>BOMBA: <span class="timer-hud" id="hudTimer">0s</span></span>
+    <button class="pxbtn" onclick="togglePause()" style="font-size:8px">⏸ PAUSA</button>
+  </div>
+  <div id="bombTimerBar"><div id="bombTimerFill"></div></div>
+  <canvas id="canvas"></canvas>
+</div>
+
+<!-- ─── OVERLAY ─── -->
+<div id="overlay">
+  <div id="overlayBox">
+    <div id="overlayTitle">—</div>
+    <div id="overlayMsg">—</div>
+    <div class="overlay-btns">
+      <button class="pxbtn" onclick="restartGame()" style="font-size:9px; padding:10px 16px">↩ REINICIAR</button>
+      <button class="pxbtn" onclick="goMenu()" style="font-size:9px; padding:10px 16px">☰ MENÚ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIG & SETTINGS
+// ─────────────────────────────────────────────
+const cfg = {
+  squares: { val:8, min:2, max:24 },
+  bombTime: { val:5, min:2, max:20 },
+  speed:    { val:3, min:1, max:8 },
+  mapSize:  { val:1, min:0, max:2, labels:['S','M','L'] },
+};
+
+let gameMode = 'flags';
+
+function adj(key, delta) {
+  const c = cfg[key];
+  c.val = Math.min(c.max, Math.max(c.min, c.val + delta));
+  const el = document.getElementById('val-' + key);
+  el.textContent = c.labels ? c.labels[c.val] : c.val;
+}
+
+function setMode(btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  gameMode = btn.dataset.mode;
+}
+
+// ─────────────────────────────────────────────
+//  FLAGS DATA  (América Latina + España + USA)
+// ─────────────────────────────────────────────
+const FLAGS = [
+  { name:'Argentina',  emoji:'🇦🇷', colors:['#74acdf','#ffffff','#74acdf'] },
+  { name:'Bolivia',    emoji:'🇧🇴', colors:['#d52b1e','#f4e400','#007a3d'] },
+  { name:'Brasil',     emoji:'🇧🇷', colors:['#009c3b','#ffdf00','#002776'] },
+  { name:'Chile',      emoji:'🇨🇱', colors:['#d52b1e','#ffffff','#0039a6'] },
+  { name:'Colombia',   emoji:'🇨🇴', colors:['#fce000','#003087','#ce1126'] },
+  { name:'Costa Rica', emoji:'🇨🇷', colors:['#002b7f','#ffffff','#ce1126'] },
+  { name:'Cuba',       emoji:'🇨🇺', colors:['#002a8f','#ffffff','#cf142b'] },
+  { name:'Ecuador',    emoji:'🇪🇨', colors:['#ffd100','#003da5','#ef3340'] },
+  { name:'El Salvador',emoji:'🇸🇻', colors:['#0f47af','#ffffff','#0f47af'] },
+  { name:'España',     emoji:'🇪🇸', colors:['#c60b1e','#ffc400','#c60b1e'] },
+  { name:'Guatemala',  emoji:'🇬🇹', colors:['#4997d0','#ffffff','#4997d0'] },
+  { name:'Honduras',   emoji:'🇭🇳', colors:['#0073cf','#ffffff','#0073cf'] },
+  { name:'México',     emoji:'🇲🇽', colors:['#006847','#ffffff','#ce1126'] },
+  { name:'Nicaragua',  emoji:'🇳🇮', colors:['#3d5fc4','#ffffff','#3d5fc4'] },
+  { name:'Panamá',     emoji:'🇵🇦', colors:['#ffffff','#d21034','#003580'] },
+  { name:'Paraguay',   emoji:'🇵🇾', colors:['#d52b1e','#ffffff','#0038a8'] },
+  { name:'Perú',       emoji:'🇵🇪', colors:['#d91023','#ffffff','#d91023'] },
+  { name:'Puerto Rico',emoji:'🇵🇷', colors:['#ed0000','#ffffff','#0a0a8a'] },
+  { name:'Uruguay',    emoji:'🇺🇾', colors:['#ffffff','#5b9bd5','#ffffff'] },
+  { name:'Venezuela',  emoji:'🇻🇪', colors:['#cf142b','#003087','#cf9f00'] },
+  { name:'USA',        emoji:'🇺🇸', colors:['#b22234','#ffffff','#3c3b6e'] },
+];
+
+// Palette de colores vivos para modo colors
+const PALETTE = [
+  '#ff4444','#ff8800','#ffcc00','#44ff88','#00ccff',
+  '#8844ff','#ff44aa','#44ffff','#ff6644','#aaff44',
+  '#4488ff','#ff44ff','#00ff88','#ffaa00','#ff2266',
+  '#66ffaa','#ff0066','#00aaff','#aaff00','#ff6600',
+  '#0044ff','#ff0044','#00ffaa','#aaff66','#6600ff',
+];
+
+// Formas abstractas (indices para dibujarlas)
+const SHAPES = ['star','diamond','cross','hexagon','triangle','octagon','plus','arrow'];
+
+// ─────────────────────────────────────────────
+//  GAME STATE
+// ─────────────────────────────────────────────
+let canvas, ctx;
+let boxes = [];
+let bomb = null;
+let bombHolder = null;
+let bombTimer = 0;
+let bombDuration = 5;
+let lastTime = 0;
+let animId = null;
+let paused = false;
+let particles = [];
+let mapW, mapH, BOX, SPEED_BASE;
+let mapSizes = [[320,480],[440,640],[560,820]];
+
+// ─────────────────────────────────────────────
+//  START / RESTART
+// ─────────────────────────────────────────────
+function startGame() {
+  document.getElementById('menu').style.display = 'none';
+  const gw = document.getElementById('gameWrap');
+  gw.style.display = 'flex';
+
+  const sIdx = cfg.mapSize.val;
+  [mapW, mapH] = mapSizes[sIdx];
+  BOX = 36;
+  SPEED_BASE = 1 + cfg.speed.val * 0.8;
+  bombDuration = cfg.bombTime.val;
+
+  canvas = document.getElementById('canvas');
+  // fit to viewport
+  const vw = window.innerWidth;
+  const vh = window.innerHeight - 60;
+  const scale = Math.min(vw / mapW, vh / mapH);
+  canvas.width  = mapW;
+  canvas.height = mapH;
+  canvas.style.width  = Math.floor(mapW * scale) + 'px';
+  canvas.style.height = Math.floor(mapH * scale) + 'px';
+
+  ctx = canvas.getContext('2d');
+  initBoxes();
+  spawnBomb();
+  paused = false;
+  document.getElementById('overlay').style.display = 'none';
+  lastTime = performance.now();
+  cancelAnimationFrame(animId);
+  animId = requestAnimationFrame(loop);
+}
+
+function restartGame() {
+  document.getElementById('overlay').style.display = 'none';
+  startGame();
+}
+
+function goMenu() {
+  cancelAnimationFrame(animId);
+  document.getElementById('overlay').style.display = 'none';
+  document.getElementById('gameWrap').style.display = 'none';
+  document.getElementById('menu').style.display = 'flex';
+}
+
+function togglePause() {
+  paused = !paused;
+  if (!paused) { lastTime = performance.now(); animId = requestAnimationFrame(loop); }
+}
+
+// ─────────────────────────────────────────────
+//  INIT BOXES
+// ─────────────────────────────────────────────
+function initBoxes() {
+  boxes = [];
+  const n = cfg.squares.val;
+  // pick data
+  let pool = [];
+  if (gameMode === 'flags') {
+    pool = [...FLAGS].sort(() => Math.random()-.5).slice(0, Math.min(n, FLAGS.length));
+    // pad if n > pool
+    while (pool.length < n) pool.push(pool[Math.floor(Math.random()*pool.length)]);
+  }
+
+  for (let i = 0; i < n; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = SPEED_BASE * (0.8 + Math.random() * 0.5);
+    const x = BOX/2 + Math.random() * (mapW - BOX);
+    const y = BOX/2 + Math.random() * (mapH - BOX);
+    let data = null;
+    if (gameMode === 'flags') data = pool[i];
+    else if (gameMode === 'colors') data = { color: PALETTE[i % PALETTE.length], name: '' };
+    else data = { shape: SHAPES[i % SHAPES.length], color: PALETTE[i % PALETTE.length], name: '' };
+
+    boxes.push({ id:i, x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+      alive: true, data, elimAnim: 0 });
+  }
+}
+
+// ─────────────────────────────────────────────
+//  BOMB
+// ─────────────────────────────────────────────
+function spawnBomb() {
+  // place bomb randomly, not on any box
+  bomb = {
+    x: BOX + Math.random() * (mapW - BOX*2),
+    y: BOX + Math.random() * (mapH - BOX*2),
+    r: 14,
+  };
+  bombHolder = null;
+  bombTimer = bombDuration;
+}
+
+// ─────────────────────────────────────────────
+//  GAME LOOP
+// ─────────────────────────────────────────────
+function loop(ts) {
+  if (paused) return;
+  const dt = Math.min((ts - lastTime) / 1000, 0.05);
+  lastTime = ts;
+
+  update(dt);
+  render();
+  updateHUD();
+
+  // check win
+  const alive = boxes.filter(b => b.alive);
+  if (alive.length <= 1) {
+    showEndScreen(alive);
+    return;
+  }
+
+  animId = requestAnimationFrame(loop);
+}
+
+// ─────────────────────────────────────────────
+//  UPDATE
+// ─────────────────────────────────────────────
+function update(dt) {
+  // move boxes
+  for (const b of boxes) {
+    if (!b.alive) continue;
+    b.x += b.vx * 60 * dt;
+    b.y += b.vy * 60 * dt;
+    // bounce walls
+    if (b.x - BOX/2 < 0)       { b.x = BOX/2;        b.vx = Math.abs(b.vx); }
+    if (b.x + BOX/2 > mapW)     { b.x = mapW-BOX/2;   b.vx = -Math.abs(b.vx); }
+    if (b.y - BOX/2 < 0)        { b.y = BOX/2;        b.vy = Math.abs(b.vy); }
+    if (b.y + BOX/2 > mapH)     { b.y = mapH-BOX/2;   b.vy = -Math.abs(b.vy); }
+  }
+
+  // ── COLISIONES ENTRE CUADROS ──
+  const alive = boxes.filter(b => b.alive);
+  for (let i = 0; i < alive.length; i++) {
+    for (let j = i + 1; j < alive.length; j++) {
+      const a = alive[i], b = alive[j];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const overlapX = BOX - Math.abs(dx);
+      const overlapY = BOX - Math.abs(dy);
+
+      if (overlapX > 0 && overlapY > 0) {
+        // ── Separación: empujar por el eje de menor overlap ──
+        if (overlapX < overlapY) {
+          const push = overlapX / 2 + 1;
+          const signX = dx >= 0 ? 1 : -1;
+          a.x -= push * signX;
+          b.x += push * signX;
+          // intercambiar componente X de velocidad
+          const tmpVx = a.vx;
+          a.vx = b.vx;
+          b.vx = tmpVx;
+        } else {
+          const push = overlapY / 2 + 1;
+          const signY = dy >= 0 ? 1 : -1;
+          a.y -= push * signY;
+          b.y += push * signY;
+          // intercambiar componente Y de velocidad
+          const tmpVy = a.vy;
+          a.vy = b.vy;
+          b.vy = tmpVy;
+        }
+
+        // ── Transferencia de bomba ──
+        if (bombHolder === a.id) {
+          bombHolder = b.id;
+          // flash visual en el receptor
+          b.bombFlash = 0.25;
+        } else if (bombHolder === b.id) {
+          bombHolder = a.id;
+          a.bombFlash = 0.25;
+        }
+      }
+    }
+  }
+
+  // bomb follows holder
+  if (bombHolder !== null) {
+    const h = boxes[bombHolder];
+    if (h && h.alive) {
+      bomb.x = h.x;
+      bomb.y = h.y - BOX/2 - bomb.r;
+    }
+  }
+
+  // tick bomb timer
+  if (bombHolder !== null) {
+    bombTimer -= dt;
+    if (bombTimer <= 0) {
+      explode();
+      return;
+    }
+  } else {
+    // bomba libre: primer cuadro que la toca la recibe
+    for (const b of boxes) {
+      if (!b.alive) continue;
+      const dx = b.x - bomb.x, dy = b.y - bomb.y;
+      if (Math.hypot(dx,dy) < BOX/2 + bomb.r - 4) {
+        bombHolder = b.id;
+        bombTimer = bombDuration;
+        b.bombFlash = 0.3;
+        break;
+      }
+    }
+  }
+
+  // decaer flash de recepción
+  for (const b of boxes) {
+    if (b.bombFlash > 0) b.bombFlash -= dt;
+  }
+
+  // particles
+  for (let i = particles.length-1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * 60 * dt;
+    p.y += p.vy * 60 * dt;
+    p.vy += 200 * dt;
+    p.life -= dt;
+    if (p.life <= 0) particles.splice(i,1);
+  }
+}
+
+function explode() {
+  if (bombHolder === null) return;
+  const b = boxes[bombHolder];
+  if (b) {
+    b.alive = false;
+    b.elimAnim = 1;
+    // spawn particles
+    for (let i = 0; i < 30; i++) {
+      const angle = Math.random()*Math.PI*2;
+      const speed = 80 + Math.random()*200;
+      particles.push({
+        x: b.x, y: b.y,
+        vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed - 60,
+        life: 0.5 + Math.random()*0.5,
+        r: 3 + Math.random()*5,
+        color: ['#ff4444','#ff8800','#ffcc00','#ff6644'][Math.floor(Math.random()*4)],
+      });
+    }
+  }
+  setTimeout(() => { spawnBomb(); }, 600);
+}
+
+// ─────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────
+function render() {
+  ctx.clearRect(0,0,mapW,mapH);
+
+  // bg grid
+  ctx.strokeStyle = 'rgba(42,42,90,0.4)';
+  ctx.lineWidth = 1;
+  const g = 32;
+  for (let x = 0; x < mapW; x+=g) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,mapH); ctx.stroke(); }
+  for (let y = 0; y < mapH; y+=g) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(mapW,y); ctx.stroke(); }
+
+  // boxes (dead first, alive on top)
+  for (const b of boxes) {
+    if (b.alive) continue;
+    drawBox(b);
+  }
+  for (const b of boxes) {
+    if (!b.alive) continue;
+    drawBox(b);
+  }
+
+  // bomb
+  if (bomb && bombHolder === null) drawFreeBomb(bomb);
+
+  // particles
+  for (const p of particles) {
+    ctx.globalAlpha = p.life * 2;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // attached bomb on holder
+  if (bombHolder !== null) {
+    const h = boxes[bombHolder];
+    if (h && h.alive) {
+      drawAttachedBomb(bomb, h);
+    }
+  }
+}
+
+function drawBox(b) {
+  const hs = BOX/2;
+  ctx.save();
+  ctx.translate(b.x, b.y);
+
+  if (!b.alive) {
+    ctx.globalAlpha = 0.18;
+  }
+
+  if (gameMode === 'flags') {
+    drawFlag(b.data, hs);
+    // label
+    if (b.alive) {
+      ctx.font = '7px "Press Start 2P"';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.fillText(b.data.name.slice(0,6), 0, hs + 12);
+    }
+  } else if (gameMode === 'colors') {
+    ctx.fillStyle = b.data.color;
+    ctx.fillRect(-hs, -hs, BOX, BOX);
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(-hs,-hs,BOX,BOX);
+  } else {
+    drawAbstract(b.data, hs);
+  }
+
+  // flash al recibir la bomba
+  if (b.alive && b.bombFlash > 0) {
+    const alpha = Math.min(b.bombFlash * 4, 0.6);
+    ctx.fillStyle = `rgba(255,220,0,${alpha})`;
+    ctx.fillRect(-hs, -hs, BOX, BOX);
+  }
+
+  // holder highlight
+  if (b.alive && b.id === bombHolder) {
+    ctx.strokeStyle = '#ff4444';
+    ctx.lineWidth = 3;
+    ctx.shadowColor = '#ff4444';
+    ctx.shadowBlur = 10;
+    ctx.strokeRect(-hs-2, -hs-2, BOX+4, BOX+4);
+    ctx.shadowBlur = 0;
+  }
+
+  ctx.restore();
+}
+
+function drawFlag(data, hs) {
+  const [c1,c2,c3] = data.colors;
+  const w = BOX, h = BOX, bh = h/3;
+  ctx.fillStyle = c1; ctx.fillRect(-hs,-hs,w,bh);
+  ctx.fillStyle = c2; ctx.fillRect(-hs,-hs+bh,w,bh);
+  ctx.fillStyle = c3; ctx.fillRect(-hs,-hs+bh*2,w,bh);
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(-hs,-hs,w,h);
+}
+
+function drawAbstract(data, hs) {
+  ctx.fillStyle = data.color;
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 2;
+  const s = hs * 0.85;
+  switch(data.shape) {
+    case 'star':
+      drawStar(ctx, 0, 0, 5, s, s*0.45);
+      break;
+    case 'diamond':
+      ctx.beginPath();
+      ctx.moveTo(0,-s); ctx.lineTo(s,0); ctx.lineTo(0,s); ctx.lineTo(-s,0);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      break;
+    case 'cross':
+      const t = s*0.35;
+      ctx.beginPath();
+      ctx.rect(-t,-s,t*2,s*2);
+      ctx.fill(); ctx.stroke();
+      ctx.beginPath();
+      ctx.rect(-s,-t,s*2,t*2);
+      ctx.fill(); ctx.stroke();
+      break;
+    case 'hexagon':
+      polygon(ctx, 0, 0, s, 6); ctx.fill(); ctx.stroke();
+      break;
+    case 'triangle':
+      polygon(ctx, 0, 0, s, 3); ctx.fill(); ctx.stroke();
+      break;
+    case 'octagon':
+      polygon(ctx, 0, 0, s, 8); ctx.fill(); ctx.stroke();
+      break;
+    default:
+      ctx.fillRect(-s,-s,s*2,s*2);
+      ctx.strokeRect(-s,-s,s*2,s*2);
+  }
+}
+
+function polygon(ctx, cx,cy,r,n) {
+  ctx.beginPath();
+  for(let i=0;i<n;i++){
+    const a = (i/n)*Math.PI*2 - Math.PI/2;
+    i===0 ? ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a))
+           : ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
+  }
+  ctx.closePath();
+}
+
+function drawStar(ctx,cx,cy,pts,r1,r2) {
+  ctx.beginPath();
+  for(let i=0;i<pts*2;i++){
+    const a = (i/(pts*2))*Math.PI*2 - Math.PI/2;
+    const r = i%2===0 ? r1 : r2;
+    i===0 ? ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a))
+           : ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
+  }
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+}
+
+function drawFreeBomb(bomb) {
+  const pulse = 0.8 + 0.2*Math.sin(Date.now()/200);
+  ctx.save();
+  ctx.translate(bomb.x, bomb.y);
+  // glow
+  ctx.shadowColor = '#ff4444';
+  ctx.shadowBlur = 12 * pulse;
+  // body
+  ctx.fillStyle = '#1a1a1a';
+  ctx.beginPath();
+  ctx.arc(0, 0, bomb.r, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#888';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // fuse
+  ctx.strokeStyle = '#cc8800';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, -bomb.r);
+  ctx.bezierCurveTo(6,-bomb.r-8, 10,-bomb.r-4, 8,-bomb.r-14);
+  ctx.stroke();
+  // spark
+  ctx.fillStyle = '#ffcc00';
+  ctx.shadowColor = '#ffcc00';
+  ctx.shadowBlur = 6;
+  ctx.beginPath();
+  ctx.arc(8, -bomb.r-14, 3*pulse, 0, Math.PI*2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.restore();
+}
+
+function drawAttachedBomb(bomb, holder) {
+  const progress = bombTimer / bombDuration;
+  const pulse = 0.85 + 0.15*Math.sin(Date.now() / (100 + progress * 150));
+  ctx.save();
+  ctx.translate(bomb.x, bomb.y);
+  const urgency = Math.max(0, (1 - progress));
+  ctx.shadowColor = `rgba(255,${Math.floor(100*(1-urgency))},0,1)`;
+  ctx.shadowBlur = 15 + 10*urgency;
+  ctx.fillStyle = '#111';
+  ctx.beginPath();
+  ctx.arc(0,0,bomb.r*pulse,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = `rgb(255,${Math.floor(255*(progress))},0)`;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  // fuse
+  ctx.strokeStyle = '#cc8800';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0,-bomb.r);
+  ctx.bezierCurveTo(6,-bomb.r-8,10,-bomb.r-4,8,-bomb.r-14);
+  ctx.stroke();
+  // spark
+  const sparkOn = Math.sin(Date.now()/60) > 0;
+  if (sparkOn) {
+    ctx.fillStyle = '#ffcc00';
+    ctx.shadowColor = '#ffcc00';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(8,-bomb.r-14,3,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.shadowBlur = 0;
+  ctx.restore();
+
+  // timer bar above the bomb
+  const barW = 50, barH = 6;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(bomb.x - barW/2, bomb.y - bomb.r - 28, barW, barH);
+  ctx.fillStyle = `rgb(255,${Math.floor(200*progress)},0)`;
+  ctx.fillRect(bomb.x - barW/2, bomb.y - bomb.r - 28, barW*progress, barH);
+}
+
+// ─────────────────────────────────────────────
+//  HUD
+// ─────────────────────────────────────────────
+function updateHUD() {
+  const alive = boxes.filter(b=>b.alive).length;
+  document.getElementById('hudAlive').textContent = alive;
+  document.getElementById('hudTimer').textContent =
+    bombHolder !== null ? bombTimer.toFixed(1)+'s' : '–';
+
+  const fill = document.getElementById('bombTimerFill');
+  if (bombHolder !== null) {
+    const p = bombTimer / bombDuration;
+    fill.style.width = (p*100) + '%';
+    fill.style.background = p > 0.5 ? '#ffcc00' : p > 0.25 ? '#ff8800' : '#ff4444';
+  } else {
+    fill.style.width = '100%';
+    fill.style.background = '#44ff88';
+  }
+}
+
+// ─────────────────────────────────────────────
+//  END SCREEN
+// ─────────────────────────────────────────────
+function showEndScreen(alive) {
+  cancelAnimationFrame(animId);
+  const overlay = document.getElementById('overlay');
+  overlay.style.display = 'flex';
+
+  if (alive.length === 1) {
+    const winner = alive[0];
+    let name = '';
+    if (gameMode === 'flags') name = winner.data.name;
+    else if (gameMode === 'colors') name = winner.data.color;
+    else name = winner.data.shape;
+
+    document.getElementById('overlayTitle').textContent = '🏆 GANADOR';
+    document.getElementById('overlayMsg').textContent =
+      gameMode === 'flags'
+        ? `¡${name} sobrevivió!`
+        : `¡El cuadro ${name} sobrevivió!`;
+  } else {
+    document.getElementById('overlayTitle').textContent = '💥 TODOS ELIMINADOS';
+    document.getElementById('overlayMsg').textContent = '¡Nadie sobrevivió!';
+  }
+}
+
+// ─────────────────────────────────────────────
+//  RESIZE
+// ─────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  if (!canvas) return;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight - 60;
+  const scale = Math.min(vw / mapW, vh / mapH);
+  canvas.style.width  = Math.floor(mapW * scale) + 'px';
+  canvas.style.height = Math.floor(mapH * scale) + 'px';
+});
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+}
+</script>
+</body>
+</html>
