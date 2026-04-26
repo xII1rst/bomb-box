@@ -41,15 +41,37 @@
 
     /* ─── MENU ─── */
     #menu {
-      width: min(420px, 96vw);
+      width: min(560px, 96vw);
       background: var(--panel);
       border: var(--pixel);
       border-color: var(--border);
-      padding: 24px 20px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       box-shadow: 0 0 40px rgba(255,68,68,0.15), inset 0 0 20px rgba(0,0,0,0.4);
+      max-height: 96dvh;
+      overflow-y: auto;
+    }
+
+    /* dos columnas del menú */
+    .menu-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .menu-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .col-title {
+      font-size: 7px;
+      color: var(--accent2);
+      letter-spacing: 2px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     #menu h1 {
@@ -252,13 +274,6 @@
       transition: background .2s;
       width: 100%;
     }
-/* ─── Speed buttons ─── */
-.speed-btn.active {
-  border-color: var(--accent2);
-  color: var(--accent2);
-  background: rgba(255,204,0,0.12);
-}
-
 /* ─── Speed buttons ─── */
 .speed-btn.active {
   border-color: var(--accent2);

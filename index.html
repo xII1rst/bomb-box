@@ -18,93 +18,93 @@
   <p class="subtitle">¿Quién aguanta la bomba?</p>
   <div class="divider"></div>
 
-  <div class="row">
-    <label>CUADROS</label>
-    <div class="ctrl">
-      <button class="pxbtn" onclick="adj('squares',-1)">◀</button>
-      <span class="val-display" id="val-squares">8</span>
-      <button class="pxbtn" onclick="adj('squares',1)">▶</button>
+  <div class="menu-cols">
+
+    <!-- ── COLUMNA IZQUIERDA: Configuración ── -->
+    <div class="menu-col">
+      <div class="col-title">⚙ CONFIG</div>
+
+      <div class="row">
+        <label>CUADROS</label>
+        <div class="ctrl">
+          <button class="pxbtn" onclick="adj('squares',-1)">◀</button>
+          <span class="val-display" id="val-squares">8</span>
+          <button class="pxbtn" onclick="adj('squares',1)">▶</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>BOMBA (s)</label>
+        <div class="ctrl">
+          <button class="pxbtn" onclick="adj('bombTime',-1)">◀</button>
+          <span class="val-display" id="val-bombTime">5</span>
+          <button class="pxbtn" onclick="adj('bombTime',1)">▶</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>VELOCIDAD</label>
+        <div class="ctrl">
+          <button class="pxbtn" onclick="adj('speed',-1)">◀</button>
+          <span class="val-display" id="val-speed">3</span>
+          <button class="pxbtn" onclick="adj('speed',1)">▶</button>
+        </div>
+      </div>
+      <div class="row">
+        <label>MAPA</label>
+        <div class="ctrl">
+          <button class="pxbtn" onclick="adj('mapSize',-1)">◀</button>
+          <span class="val-display" id="val-mapSize">M</span>
+          <button class="pxbtn" onclick="adj('mapSize',1)">▶</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="col-title">🗺 ESTILO MAPA</div>
+      <div class="mode-btns">
+        <button class="mode-btn style-btn active" data-style="retro"  onclick="setMapStyle(this)">🪨 RETRO</button>
+        <button class="mode-btn style-btn"        data-style="modern" onclick="setMapStyle(this)">✨ MODERN</button>
+      </div>
     </div>
-  </div>
-  <div class="row">
-    <label>BOMBA (s)</label>
-    <div class="ctrl">
-      <button class="pxbtn" onclick="adj('bombTime',-1)">◀</button>
-      <span class="val-display" id="val-bombTime">5</span>
-      <button class="pxbtn" onclick="adj('bombTime',1)">▶</button>
+
+    <!-- ── COLUMNA DERECHA: Modos ── -->
+    <div class="menu-col">
+      <div class="col-title">🎮 VISUAL</div>
+      <div class="mode-btns">
+        <button class="mode-btn active" data-mode="flags"    onclick="setMode(this)">🏳️ FLAGS</button>
+        <button class="mode-btn"        data-mode="colors"   onclick="setMode(this)">🎨 COLOR</button>
+        <button class="mode-btn"        data-mode="abstract" onclick="setMode(this)">👾 FIG.</button>
+      </div>
+
+      <div class="col-title">🌍 REGIÓN</div>
+      <div class="mode-btns">
+        <button class="mode-btn region-btn active" data-region="latam"  onclick="setRegion(this)">🌎 LATAM</button>
+        <button class="mode-btn region-btn"        data-region="norte"  onclick="setRegion(this)">🌐 NORTE</button>
+        <button class="mode-btn region-btn"        data-region="europa" onclick="setRegion(this)">🇪🇺 EU</button>
+        <button class="mode-btn region-btn"        data-region="asia"   onclick="setRegion(this)">🌏 ASIA</button>
+        <button class="mode-btn region-btn"        data-region="all"    onclick="setRegion(this)">🌍 ALL</button>
+      </div>
+
+      <div class="col-title">⚔ MODO DE JUEGO</div>
+      <div class="mode-btns">
+        <button class="mode-btn rule-btn active" data-rule="normal"  onclick="setRuleMode(this)">💥 NORMAL</button>
+        <button class="mode-btn rule-btn"        data-rule="last"    onclick="setRuleMode(this)">⏱ ÚLTIMO</button>
+        <button class="mode-btn rule-btn"        data-rule="chaos"   onclick="setRuleMode(this)">🌀 CAOS</button>
+        <button class="mode-btn rule-btn"        data-rule="team"    onclick="setRuleMode(this)">👥 EQUIPO</button>
+        <button class="mode-btn rule-btn"        data-rule="rounds"  onclick="setRuleMode(this)">🔁 RONDAS</button>
+      </div>
+
+      <div id="roundsCfg" class="row" style="display:none;align-items:center;gap:8px">
+        <label>RONDAS</label>
+        <div class="ctrl">
+          <button class="pxbtn" onclick="adj('rounds',-1)">◀</button>
+          <span class="val-display" id="val-rounds">3</span>
+          <button class="pxbtn" onclick="adj('rounds',1)">▶</button>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="row">
-    <label>VELOCIDAD</label>
-    <div class="ctrl">
-      <button class="pxbtn" onclick="adj('speed',-1)">◀</button>
-      <span class="val-display" id="val-speed">3</span>
-      <button class="pxbtn" onclick="adj('speed',1)">▶</button>
-    </div>
-  </div>
-  <div class="row">
-    <label>MAPA</label>
-    <div class="ctrl">
-      <button class="pxbtn" onclick="adj('mapSize',-1)">◀</button>
-      <span class="val-display" id="val-mapSize">M</span>
-      <button class="pxbtn" onclick="adj('mapSize',1)">▶</button>
-    </div>
-  </div>
+
+  </div><!-- /menu-cols -->
 
   <div class="divider"></div>
-
-  <div class="row" style="flex-direction:column;align-items:flex-start;gap:6px">
-    <label>VISUAL</label>
-    <div class="mode-btns">
-      <button class="mode-btn active" data-mode="flags"    onclick="setMode(this)">🏳️ BANDERAS</button>
-      <button class="mode-btn"        data-mode="colors"   onclick="setMode(this)">🎨 COLORES</button>
-      <button class="mode-btn"        data-mode="abstract" onclick="setMode(this)">👾 FIGURAS</button>
-    </div>
-  </div>
-
-  <div class="row" style="flex-direction:column;align-items:flex-start;gap:6px">
-    <label>REGIÓN</label>
-    <div class="mode-btns">
-      <button class="mode-btn region-btn active" data-region="latam"  onclick="setRegion(this)">🌎 LATAM</button>
-      <button class="mode-btn region-btn"        data-region="norte"  onclick="setRegion(this)">🌐 NORTE</button>
-      <button class="mode-btn region-btn"        data-region="europa" onclick="setRegion(this)">🇪🇺 EUROPA</button>
-      <button class="mode-btn region-btn"        data-region="asia"   onclick="setRegion(this)">🌏 ASIA</button>
-      <button class="mode-btn region-btn"        data-region="all"    onclick="setRegion(this)">🌍 TODOS</button>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="row" style="flex-direction:column;align-items:flex-start;gap:6px">
-    <label>MODO DE JUEGO</label>
-    <div class="mode-btns">
-      <button class="mode-btn rule-btn active" data-rule="normal"  onclick="setRuleMode(this)">💥 NORMAL</button>
-      <button class="mode-btn rule-btn"        data-rule="last"    onclick="setRuleMode(this)">⏱ ÚLTIMO</button>
-      <button class="mode-btn rule-btn"        data-rule="chaos"   onclick="setRuleMode(this)">🌀 CAOS</button>
-      <button class="mode-btn rule-btn"        data-rule="team"    onclick="setRuleMode(this)">👥 EQUIPO</button>
-      <button class="mode-btn rule-btn"        data-rule="rounds"  onclick="setRuleMode(this)">🔁 RONDAS</button>
-    </div>
-  </div>
-
-  <div id="roundsCfg" class="row" style="display:none;align-items:center;gap:8px">
-    <label>RONDAS</label>
-    <div class="ctrl">
-      <button class="pxbtn" onclick="adj('rounds',-1)">◀</button>
-      <span class="val-display" id="val-rounds">3</span>
-      <button class="pxbtn" onclick="adj('rounds',1)">▶</button>
-    </div>
-  </div>
-
-  <div class="divider"></div>
-
-  <div class="row" style="flex-direction:column;align-items:flex-start;gap:6px">
-    <label>ESTILO MAPA</label>
-    <div class="mode-btns">
-      <button class="mode-btn style-btn active" data-style="retro"  onclick="setMapStyle(this)">🪨 RETRO</button>
-      <button class="mode-btn style-btn"        data-style="modern" onclick="setMapStyle(this)">✨ MODERN</button>
-    </div>
-  </div>
-
   <button id="startBtn" onclick="startGame()">▶ JUGAR</button>
 </div>
 
